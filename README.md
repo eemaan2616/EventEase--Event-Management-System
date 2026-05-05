@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # EventHub - Event Booking Platform
 
 A full-stack MERN (MongoDB, Express, React, Node.js) event/workshop booking platform with role-based access, ticket booking, PDF ticket generation, blogs, notifications, and analytics.
@@ -146,3 +147,7 @@ frontend/
     App.jsx      - Router configuration
     main.jsx     - Entry point
 ```
+=======
+# EventEase--Event-Management-System
+EventEase is a full-stack MERN application designed for student societies at FAST NUCES Lahore. It allows societies to manage events, track budgets, submit approvals, and collaborate with university admins. The platform includes features like event registration, AI-generated descriptions, in-app notifications, and a responsive UI.
+>>>>>>> 7cb3d11ff22a2d22e38b0974861cca349727fe8b
