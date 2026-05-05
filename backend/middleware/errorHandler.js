@@ -1,6 +1,7 @@
 const errorHandler = (err, req, res, next) => {
   let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   let message = err.message;
+  let errors = [];
 
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
     statusCode = 404;
@@ -19,7 +20,9 @@ const errorHandler = (err, req, res, next) => {
   }
 
   res.status(statusCode).json({
+    success: false,
     message,
+    errors,
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 };

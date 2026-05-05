@@ -1,14 +1,18 @@
-import { useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchBlog, clearBlog } from '../redux/slices/blogSlice';
+import { fetchBlog, clearBlog, deleteBlog } from '../redux/slices/blogSlice';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { toast } from 'react-toastify';
 import { HiOutlineArrowLeft, HiOutlineUser, HiOutlineClock } from 'react-icons/hi';
 
 export default function BlogDetail() {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { blog, loading } = useSelector(state => state.blogs);
+  const { user } = useSelector(state => state.auth);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     dispatch(fetchBlog(id));
@@ -16,6 +20,26 @@ export default function BlogDetail() {
   }, [dispatch, id]);
 
   if (loading || !blog) return <LoadingSpinner />;
+
+  const isAuthor = blog.author?._id === user?._id;
+  const canManage = Boolean(user) && (isAuthor || user?.role === 'admin');
+
+  const handleDelete = async () => {
+    if (!canManage || deleting) return;
+    const confirmed = window.confirm('Are you sure you want to delete this blog post?');
+    if (!confirmed) return;
+
+    setDeleting(true);
+    const result = await dispatch(deleteBlog(blog._id));
+    setDeleting(false);
+
+    if (result.meta.requestStatus === 'fulfilled') {
+      toast.success('Blog post deleted');
+      navigate('/blogs');
+    } else {
+      toast.error(result.payload || 'Failed to delete blog post');
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -44,6 +68,24 @@ export default function BlogDetail() {
         <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
           {blog.content}
         </div>
+
+        {canManage && (
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              to={`/blogs/edit/${blog._id}`}
+              className="px-5 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+            >
+              Edit Post
+            </Link>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-5 py-2.5 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
+            >
+              {deleting ? 'Deleting...' : 'Delete Post'}
+            </button>
+          </div>
+        )}
       </article>
     </div>
   );

@@ -22,6 +22,7 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/contact', require('./routes/contact'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/recommendations', require('./routes/recommendations'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Event Booking Platform API' });

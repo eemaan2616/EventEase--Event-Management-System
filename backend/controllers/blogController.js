@@ -2,9 +2,18 @@ const Blog = require('../models/Blog');
 
 exports.getBlogs = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
-    const total = await Blog.countDocuments({ published: true });
-    const blogs = await Blog.find({ published: true })
+    const { page = 1, limit = 10, search } = req.query;
+    const query = { published: true };
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const total = await Blog.countDocuments(query);
+    const blogs = await Blog.find(query)
       .populate('author', 'name email avatar')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)

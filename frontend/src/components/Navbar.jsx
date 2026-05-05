@@ -20,6 +20,16 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
   }, [user, dispatch]);
 
   useEffect(() => {
+    if (!user) return undefined;
+
+    const intervalId = setInterval(() => {
+      dispatch(fetchNotifications());
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [user, dispatch]);
+
+  useEffect(() => {
     const handleClick = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotif(false);
       if (profileRef.current && !profileRef.current.contains(e.target)) setShowProfile(false);
@@ -70,10 +80,22 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
                   {showNotif && (
                     <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
                       <div className="p-3 border-b border-gray-100 flex justify-between items-center">
-                        <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
-                        {unreadCount > 0 && (
-                          <button onClick={() => dispatch(markAllAsRead())} className="text-xs text-primary-600 hover:text-primary-700">Mark all read</button>
-                        )}
+                        <div>
+                          <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {unreadCount > 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+                              {unreadCount}
+                            </span>
+                          )}
+                          {unreadCount > 0 && (
+                            <button onClick={() => dispatch(markAllAsRead())} className="text-xs text-primary-600 hover:text-primary-700">Mark all read</button>
+                          )}
+                        </div>
                       </div>
                       <div className="overflow-y-auto max-h-72">
                         {notifications.length === 0 ? (
@@ -81,7 +103,7 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
                         ) : (
                           notifications.slice(0, 10).map(n => (
                             <div key={n._id} onClick={() => { if (!n.read) dispatch(markAsRead(n._id)); }}
-                              className={`p-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 ${!n.read ? 'bg-primary-50' : ''}`}>
+                              className={`p-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 ${!n.read ? 'bg-primary-50 border-l-4 border-l-primary-500' : ''}`}>
                               <p className="text-sm text-gray-700">{n.message}</p>
                               <p className="text-xs text-gray-400 mt-1">{new Date(n.createdAt).toLocaleDateString()}</p>
                             </div>

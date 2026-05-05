@@ -12,11 +12,19 @@ export default function Profile() {
   const { user } = useSelector(state => state.auth);
   const { bookings } = useSelector(state => state.bookings);
   const { myEvents } = useSelector(state => state.events);
-  const [form, setForm] = useState({ name: '', email: '', phone: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', avatar: '', bio: '' });
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
-    if (user) setForm({ name: user.name || '', email: user.email || '', phone: user.phone || '' });
+    if (user) {
+      setForm({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        avatar: user.avatar || '',
+        bio: user.bio || '',
+      });
+    }
     dispatch(fetchMyBookings());
     if (user?.role === 'organizer' || user?.role === 'admin') dispatch(fetchMyEvents());
   }, [user, dispatch]);
@@ -38,7 +46,19 @@ export default function Profile() {
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-2xl font-bold">
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt={`${user?.name || 'User'} avatar`}
+              className="w-16 h-16 rounded-full object-cover border border-gray-200"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.nextElementSibling;
+                if (fallback) fallback.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-16 h-16 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-2xl font-bold ${user?.avatar ? 'hidden' : ''}`}>
             {user?.name?.charAt(0).toUpperCase()}
           </div>
           <div>
@@ -74,6 +94,28 @@ export default function Profile() {
                   placeholder="+1 234 567 8900" />
               </div>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Avatar URL</label>
+              <input
+                type="url"
+                value={form.avatar}
+                onChange={e => setForm({ ...form, avatar: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                placeholder="https://example.com/avatar.jpg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Bio</label>
+              <textarea
+                value={form.bio}
+                onChange={e => setForm({ ...form, bio: e.target.value })}
+                rows={4}
+                maxLength={500}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm resize-none"
+                placeholder="Tell us a little about yourself..."
+              />
+              <p className="text-xs text-gray-400 mt-1">{form.bio.length}/500</p>
+            </div>
             <div className="flex gap-3">
               <button type="submit" className="px-6 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 text-sm">Save</button>
               <button type="button" onClick={() => setEditing(false)} className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 text-sm">Cancel</button>
@@ -83,6 +125,10 @@ export default function Profile() {
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-sm"><HiOutlineMail className="text-gray-400" size={18} /><span className="text-gray-700">{user?.email}</span></div>
             <div className="flex items-center gap-3 text-sm"><HiOutlinePhone className="text-gray-400" size={18} /><span className="text-gray-700">{user?.phone || 'Not set'}</span></div>
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-1">Bio</p>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">{user?.bio || 'No bio added yet.'}</p>
+            </div>
             <button onClick={() => setEditing(true)} className="mt-4 px-6 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 text-sm">Edit Profile</button>
           </div>
         )}

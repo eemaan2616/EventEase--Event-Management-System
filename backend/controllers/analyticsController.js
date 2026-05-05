@@ -2,6 +2,18 @@ const User = require('../models/User');
 const Event = require('../models/Event');
 const Booking = require('../models/Booking');
 
+const buildSeriesFromDocs = (docs, field = 'count') => {
+  const dateMap = new Map();
+  docs.forEach((doc) => {
+    const date = new Date(doc.createdAt).toISOString().split('T')[0];
+    dateMap.set(date, (dateMap.get(date) || 0) + (doc[field] || 1));
+  });
+
+  return Array.from(dateMap.entries())
+    .sort(([a], [b]) => new Date(a) - new Date(b))
+    .map(([date, count]) => ({ date, count }));
+};
+
 exports.getAdminAnalytics = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -24,6 +36,11 @@ exports.getAdminAnalytics = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(10);
 
+    const [allEvents, allBookings] = await Promise.all([
+      Event.find().select('createdAt'),
+      Booking.find().select('createdAt'),
+    ]);
+
     res.json({
       totalUsers,
       totalEvents,
@@ -32,6 +49,8 @@ exports.getAdminAnalytics = async (req, res) => {
       usersByRole,
       eventsByCategory,
       recentBookings,
+      eventsOverTime: buildSeriesFromDocs(allEvents),
+      bookingsOverTime: buildSeriesFromDocs(allBookings),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -53,6 +72,8 @@ exports.getOrganizerAnalytics = async (req, res) => {
       { $group: { _id: '$event', count: { $sum: 1 }, revenue: { $sum: '$totalPrice' } } },
     ]);
 
+    const organizerBookings = await Booking.find({ event: { $in: eventIds } }).select('createdAt');
+
     const eventsWithBookings = events.map(event => {
       const stats = bookingsPerEvent.find(b => b._id.toString() === event._id.toString());
       return {
@@ -70,6 +91,8 @@ exports.getOrganizerAnalytics = async (req, res) => {
       totalBookings,
       totalRevenue,
       eventsWithBookings,
+      eventsOverTime: buildSeriesFromDocs(events),
+      bookingsOverTime: buildSeriesFromDocs(organizerBookings),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

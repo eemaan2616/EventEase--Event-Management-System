@@ -6,6 +6,17 @@ import { fetchMyEvents } from '../redux/slices/eventSlice';
 import API from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { HiOutlineCalendar, HiOutlineTicket, HiOutlineCurrencyDollar, HiOutlineUsers, HiOutlinePlus } from 'react-icons/hi';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
+} from 'recharts';
 
 function StatCard({ title, value, icon: Icon, color }) {
   return (
@@ -17,6 +28,99 @@ function StatCard({ title, value, icon: Icon, color }) {
           <p className="text-2xl font-bold text-gray-900">{value}</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AnalyticsCharts({ eventsOverTime = [], bookingsOverTime = [] }) {
+  const eventData = eventsOverTime.map((item) => ({
+    ...item,
+    label: item.date?.slice(5) || item.date,
+  }));
+  const bookingData = bookingsOverTime.map((item) => ({
+    ...item,
+    label: item.date?.slice(5) || item.date,
+  }));
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 className="font-semibold text-gray-900 mb-4">Events Created Over Time</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={eventData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="label" fontSize={12} />
+              <YAxis allowDecimals={false} fontSize={12} />
+              <Tooltip />
+              <Line type="monotone" dataKey="count" stroke="#4F46E5" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 className="font-semibold text-gray-900 mb-4">Bookings Over Time</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={bookingData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="label" fontSize={12} />
+              <YAxis allowDecimals={false} fontSize={12} />
+              <Tooltip />
+              <Bar dataKey="count" fill="#10B981" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecommendedSection() {
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    API.get('/recommendations?limit=4')
+      .then((res) => {
+        if (mounted) setRecommendations(res.data.recommendations || []);
+      })
+      .catch(() => {
+        if (mounted) setRecommendations([]);
+      })
+      .finally(() => {
+        if (mounted) setLoadingRecommendations(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-6 mt-6">
+      <h3 className="font-semibold text-gray-900 mb-4">Recommended for You</h3>
+      {loadingRecommendations ? (
+        <p className="text-sm text-gray-500">Loading recommendations...</p>
+      ) : recommendations.length === 0 ? (
+        <p className="text-sm text-gray-500">No recommendations yet. Explore events to get personalized suggestions.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {recommendations.map((event) => (
+            <Link
+              key={event._id}
+              to={`/events/${event._id}`}
+              className="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
+            >
+              <p className="text-sm font-semibold text-gray-900 line-clamp-1">{event.title}</p>
+              <p className="text-xs text-gray-500 capitalize mt-1">{event.category}</p>
+              <p className="text-xs text-gray-500 mt-1">{new Date(event.date).toLocaleDateString()}</p>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -57,6 +161,7 @@ function AttendeeDashboard() {
           </div>
         )}
       </div>
+      <RecommendedSection />
     </div>
   );
 }
@@ -117,6 +222,11 @@ function OrganizerDashboard() {
           </table>
         )}
       </div>
+      <AnalyticsCharts
+        eventsOverTime={analytics?.eventsOverTime || []}
+        bookingsOverTime={analytics?.bookingsOverTime || []}
+      />
+      <RecommendedSection />
     </div>
   );
 }
@@ -163,6 +273,10 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
+      <AnalyticsCharts
+        eventsOverTime={analytics?.eventsOverTime || []}
+        bookingsOverTime={analytics?.bookingsOverTime || []}
+      />
       <div className="bg-white rounded-xl border border-gray-200 p-6 mt-6">
         <h3 className="font-semibold text-gray-900 mb-4">Recent Bookings</h3>
         <div className="space-y-3">

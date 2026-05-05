@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Please add a password'],
-    minlength: 6,
+    minlength: 8,
     select: false,
   },
   role: {
@@ -33,6 +33,11 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: '',
+  },
+  bio: {
+    type: String,
+    default: '',
+    maxlength: 500,
   },
 }, { timestamps: true });
 

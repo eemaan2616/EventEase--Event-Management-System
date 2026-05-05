@@ -17,6 +17,7 @@ import EditEvent from './pages/EditEvent';
 import Blogs from './pages/Blogs';
 import BlogDetail from './pages/BlogDetail';
 import CreateBlog from './pages/CreateBlog';
+import EditBlog from './pages/EditBlog';
 import Contact from './pages/Contact';
 import AdminPanel from './pages/AdminPanel';
 import NotFound from './pages/NotFound';
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/create-event" element={<RoleRoute roles={['organizer', 'admin']}><CreateEvent /></RoleRoute>} />
         <Route path="/edit-event/:id" element={<RoleRoute roles={['organizer', 'admin']}><EditEvent /></RoleRoute>} />
         <Route path="/blogs/create" element={<RoleRoute roles={['organizer', 'admin']}><CreateBlog /></RoleRoute>} />
+        <Route path="/blogs/edit/:id" element={<RoleRoute roles={['organizer', 'admin']}><EditBlog /></RoleRoute>} />
         <Route path="/admin" element={<RoleRoute roles={['admin']}><AdminPanel /></RoleRoute>} />
       </Route>
 

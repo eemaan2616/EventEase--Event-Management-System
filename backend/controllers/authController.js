@@ -52,6 +52,7 @@ exports.login = async (req, res) => {
       role: user.role,
       phone: user.phone,
       avatar: user.avatar,
+      bio: user.bio,
       token: generateToken(user._id),
     });
   } catch (error) {
@@ -70,7 +71,7 @@ exports.getMe = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email, phone, avatar } = req.body;
+    const { name, email, phone, avatar, bio } = req.body;
     const user = await User.findById(req.user._id);
 
     if (user) {
@@ -78,6 +79,7 @@ exports.updateProfile = async (req, res) => {
       user.email = email || user.email;
       user.phone = phone !== undefined ? phone : user.phone;
       user.avatar = avatar !== undefined ? avatar : user.avatar;
+      user.bio = bio !== undefined ? bio : user.bio;
 
       const updatedUser = await user.save();
       res.json({
@@ -87,6 +89,7 @@ exports.updateProfile = async (req, res) => {
         role: updatedUser.role,
         phone: updatedUser.phone,
         avatar: updatedUser.avatar,
+        bio: updatedUser.bio,
       });
     } else {
       res.status(404).json({ message: 'User not found' });
